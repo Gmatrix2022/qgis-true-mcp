@@ -1,0 +1,16 @@
+[general]
+name=QGIS Standard MCP
+qgisMinimumVersion=3.22
+description=Standard MCP (Model Context Protocol) server for QGIS. Exposes structured GIS tools via JSON-RPC 2.0.
+version=0.1.0
+author=Hermes Project
+email=hermes@example.com
+about=Implements the Model Context Protocol (MCP) natively in QGIS, exposing structured GIS tools to AI assistants like Hermes, Claude, and ChatGPT. No code execution backdoor - all tools are parameterized and safe.
+tracker=https://github.com/Gmatrix2022/qgis-true-mcp/issues
+repository=https://github.com/Gmatrix2022/qgis-true-mcp
+tags=mcp,model context protocol,ai,llm,gis,qgis,hermes
+homepage=https://github.com/Gmatrix2022/qgis-true-mcp
+category=Analysis
+icon=icon.png
+experimental=True
+deprecated=False
