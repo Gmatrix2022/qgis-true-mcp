@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QGIS MCP V1 vs V2 架构对比</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --surface: #ffffff;
+  --border: #e1e4e8;
+  --text: #24292e;
+  --text-dim: #586069;
+  --text-bright: #000000;
+  --accent: #0366d6;
+  --accent2: #28a745;
+  --accent3: #6f42c1;
+  --accent4: #e36209;
+  --accent5: #d73a49;
+  --code-bg: #f6f8fa;
+  --card-bg: #ffffff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+h1 {
+  color: var(--text-bright);
+  font-size: 2.2em;
+  font-weight: 700;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+h2 {
+  color: var(--text-bright);
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 48px;
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 3px solid var(--accent);
+}
+h3 {
+  color: var(--accent);
+  font-size: 1.15em;
+  font-weight: 600;
+  margin-top: 28px;
+  margin-bottom: 12px;
+}
+p { margin-bottom: 14px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+blockquote {
+  border-left: 3px solid var(--accent3);
+  padding: 8px 16px;
+  margin: 16px 0;
+  background: var(--surface);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-dim);
+  font-style: italic;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  margin: 16px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace;
+  font-size: 0.9em;
+}
+:not(pre) > code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent3);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+}
+th {
+  background: var(--code-bg);
+  color: var(--text-bright);
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+td {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: rgba(246, 248, 250, 0.5); }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 16px 0;
+}
+.card-accent { border-left: 3px solid var(--accent); }
+.card-accent2 { border-left: 3px solid var(--accent2); }
+.card-accent3 { border-left: 3px solid var(--accent3); }
+.card-accent4 { border-left: 3px solid var(--accent4); }
+.card-accent5 { border-left: 3px solid var(--accent5); }
+.card-title {
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+  font-size: 1.05em;
+}
+.arch-diagram {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  text-align: center;
+}
+.arch-diagram pre {
+  text-align: left;
+  display: inline-block;
+  margin: 0;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--accent);
+}
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 4px;
+}
+.tag-blue { background: rgba(3,102,214,0.1); color: var(--accent); }
+.tag-green { background: rgba(40,167,69,0.1); color: var(--accent2); }
+.tag-purple { background: rgba(111,66,193,0.1); color: var(--accent3); }
+.tag-orange { background: rgba(227,98,9,0.1); color: var(--accent4); }
+.tag-red { background: rgba(215,58,73,0.1); color: var(--accent5); }
+ul, ol { margin: 8px 0 14px 24px; }
+li { margin-bottom: 4px; }
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 32px 0;
+}
+.footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 13px;
+  text-align: center;
+}
+.highlight {
+  background: rgba(3,102,214,0.05);
+  border: 1px solid rgba(3,102,214,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-right: 6px;
+}
+.badge-old { background: rgba(215,58,73,0.1); color: var(--accent5); }
+.badge-new { background: rgba(40,167,69,0.1); color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<h1>QGIS MCP V1 → V2 架构升级</h1>
+<blockquote>V1: 自定义 TCP socket 直连 QGIS 插件 ❌ 不符合 MCP 标准<br>
+V2: FastMCP 标准框架 + TCP 桥接 QGIS 插件 ✅ 符合 MCP 规范</blockquote>
+
+<!-- ============================================================ -->
+<h2>一、问题在哪</h2>
+
+<div class="card card-accent5">
+<div class="card-title">V1 的核心问题</div>
+<p>V1 号称是 MCP，但实际做法是：</p>
+<ol style="margin-left: 20px;">
+<li>Hermes 直接通过 <strong>raw TCP socket</strong> 连到 QGIS 插件的 9876 端口</li>
+<li>自己构造 JSON-RPC 2.0 格式的消息（手动拼 <code>{"jsonrpc":"2.0","method":"tools/call",...}</code>）</li>
+<li>自己处理 TCP 分包、缓冲、解析</li>
+<li>没有使用 MCP SDK，没有标准传输层</li>
+</ol>
+<p style="margin-top: 12px;"><strong>类比</strong>：这就像说自己做了一个 RESTful API，但用的是自定义 TCP 协议，没有用 HTTP。GET/POST/PUT/DELETE 才是 RESTful 的标准，不是自己发明一种格式然后说"我这就是 REST"。</p>
+</div>
+
+<div class="arch-diagram">
+<pre>
+<span style="color: var(--accent5);">V1（错误做法）：</span>
+
+Hermes ──[raw TCP socket]──► QGIS 插件 :9876
+        │                     │
+        └── 手动拼 JSON-RPC ──┘   └── 自己解析
+        ❌ 没有 MCP SDK
+        ❌ 没有标准传输层
+        ❌ 没有工具 schema 注册
+        ❌ 任何标准 MCP 客户端都不认
+</pre>
+</div>
+
+<!-- ============================================================ -->
+<h2>二、V2 怎么改</h2>
+
+<div class="card card-accent2">
+<div class="card-title">V2 的正确做法</div>
+<ol style="margin-left: 20px;">
+<li><strong>MCP Server</strong>（FastMCP 框架）：对外暴露标准 MCP 接口，LLM 客户端通过 stdio/SSE/HTTP 连接</li>
+<li><strong>TCP Client</strong>：MCP Server 内部通过 TCP 连接 QGIS 插件，转发命令</li>
+<li><strong>QGIS 插件</strong>：保持不变，已经在做 JSON-RPC 2.0 协议</li>
+</ol>
+<p style="margin-top: 12px;">这就像做 RESTful API：用 HTTP 协议 + 标准 HTTP 方法 + JSON 格式。MCP 的标准就是：JSON-RPC 2.0 + stdio/SSE/HTTP 传输 + 标准工具注册。</p>
+</div>
+
+<div class="arch-diagram">
+<pre>
+<span style="color: var(--accent2);">V2（正确做法）：</span>
+
+LLM Client (Claude/Cursor/Hermes)
+    │
+    │ stdio / SSE / HTTP（MCP 标准传输层）
+    │ JSON-RPC 2.0（MCP 标准协议）
+    ▼
+┌─────────────────────────────────────────┐
+│  FastMCP Server (server/server.py)       │
+│  ├── @mcp.tool() 注册工具（自动生成 schema）│
+│  ├── MCP SDK 处理协议                    │
+│  └── TCP Client 转发到 QGIS 插件         │
+└──────────────────┬──────────────────────┘
+                   │
+                   │ raw TCP socket（内部通信）
+                   │ JSON-RPC 2.0（QGIS 插件原生协议）
+                   ▼
+┌─────────────────────────────────────────┐
+│  QGIS 插件 (plugin.py)                   │
+│  ├── QTimer 25ms 主线程安全               │
+│  ├── TCP Server 监听 :9876               │
+│  └── PyQGIS API 执行 GIS 操作           │
+└─────────────────────────────────────────┘
+
+✅ 标准 MCP 协议
+✅ 标准 MCP 传输层
+✅ 标准工具 schema
+✅ 任何 MCP 客户端都能连
+</pre>
+</div>
+
+<!-- ============================================================ -->
+<h2>三、文件结构变化</h2>
+
+<table>
+<tr><th>文件</th><th>V1</th><th>V2</th><th>说明</th></tr>
+<tr><td><code>server/server.py</code></td><td>❌ 不存在</td><td><span class="badge badge-new">新增</span></td><td>FastMCP 服务器，注册 18 个标准 MCP 工具</td></tr>
+<tr><td><code>server/client.py</code></td><td>❌ 不存在</td><td><span class="badge badge-new">新增</span></td><td>TCP 客户端，连接 QGIS 插件</td></tr>
+<tr><td><code>server/__init__.py</code></td><td>❌ 不存在</td><td><span class="badge badge-new">新增</span></td><td>包初始化</td></tr>
+<tr><td><code>server/__main__.py</code></td><td>❌ 不存在</td><td><span class="badge badge-new">新增</span></td><td>模块入口</td></tr>
+<tr><td><code>run_server.py</code></td><td>❌ 不存在</td><td><span class="badge badge-new">新增</span></td><td>运行脚本</td></tr>
+<tr><td><code>pyproject.toml</code></td><td>❌ 不存在</td><td><span class="badge badge-new">新增</span></td><td>Python 包配置</td></tr>
+<tr><td><code>plugin.py</code></td><td>✅ 不变</td><td>✅ 不变</td><td>QGIS 插件代码保持不变</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>四、协议对比</h2>
+
+<h3>V1：自定义格式（❌ 不符合标准）</h3>
+
+<pre><code># V1 客户端发送
+{"jsonrpc": "2.0", "method": "tools/call", "params": {
+  "name": "get_layers", "arguments": {}
+}, "id": 1}
+
+# 通过 raw TCP socket 直接发送，没有标准传输层</code></pre>
+
+<h3>V2：标准 MCP（✅ 符合规范）</h3>
+
+<pre><code># V2 客户端通过 stdio 连接 FastMCP Server
+# FastMCP 自动处理 JSON-RPC 2.0 协议
+
+# Claude Desktop 配置示例
+{
+  "mcpServers": {
+    "qgis": {
+      "command": "python",
+      "args": ["/path/to/run_server.py"],
+      "env": {
+        "QGIS_MCP_HOST": "192.168.0.100",
+        "QGIS_MCP_PORT": "9876"
+      }
+    }
+  }
+}</code></pre>
+
+<!-- ============================================================ -->
+<h2>五、工具注册对比</h2>
+
+<h3>V1：手动定义 schema（❌ 不是 MCP 标准）</h3>
+
+<pre><code># V1 在插件端手动定义工具 schema
+MCP_TOOLS = [
+    {
+        "name": "get_layers",
+        "description": "List all layers",
+        "inputSchema": {"type": "object", "properties": {}}
+    },
+    # ... 18 个工具手动列举
+]
+
+# 客户端直接通过 TCP 发送 tools/list 请求获取</code></pre>
+
+<h3>V2：FastMCP 自动注册（✅ MCP 标准）</h3>
+
+<pre><code># V2 使用 @mcp.tool() 装饰器自动注册
+@mcp.tool(
+    title="Get Layers",
+    description="List all layers in the current QGIS project with their properties."
+)
+async def get_layers(ctx: Context) -> list[TextContent]:
+    result = _call_tool("get_layers", {})
+    return [TextContent(type="text", text=json.dumps(result, indent=2))]
+
+# FastMCP 自动从函数签名生成 JSON Schema
+# MCP SDK 自动处理 tools/list 响应</code></pre>
+
+<!-- ============================================================ -->
+<h2>六、运行方式</h2>
+
+<div class="card card-accent">
+<div class="card-title">安装依赖</div>
+<pre><code>pip install mcp
+# 或使用 uvx
+uv pip install -e /path/to/qgis-standard-mcp</code></pre>
+</div>
+
+<div class="card card-accent2">
+<div class="card-title">stdio 模式（Claude Desktop / Cursor）</div>
+<pre><code>python run_server.py
+# 或
+python -m server</code></pre>
+</div>
+
+<div class="card card-accent3">
+<div class="card-title">SSE 模式（远程访问）</div>
+<pre><code>python run_server.py --transport sse --sse-port 8080
+# 客户端连接 http://localhost:8080/sse</code></pre>
+</div>
+
+<div class="card card-accent4">
+<div class="card-title">HTTP 模式（Streamable HTTP）</div>
+<pre><code>python run_server.py --transport http --sse-port 8080</code></pre>
+</div>
+
+<!-- ============================================================ -->
+<h2>七、与 nkarasiak 方案的对比</h2>
+
+<table>
+<tr><th>维度</th><th>nkarasiak/qgis-mcp</th><th>我们的 V2</th></tr>
+<tr><td><strong>MCP 标准</strong></td><td><span class="tag tag-green">✅ 符合</span></td><td><span class="tag tag-green">✅ 符合</span></td></tr>
+<tr><td><strong>框架</strong></td><td>FastMCP</td><td>FastMCP</td></tr>
+<tr><td><strong>传输层</strong></td><td>stdio/SSE/HTTP</td><td>stdio/SSE/HTTP</td></tr>
+<tr><td><strong>工具数</strong></td><td>50+</td><td>18（核心）</td></tr>
+<tr><td><strong>插件协议</strong></td><td>4字节长度头 + JSON</td><td>raw TCP + JSON-RPC 2.0</td></tr>
+<tr><td><strong>安装方式</strong></td><td><code>uvx qgis-mcp</code></td><td><code>python run_server.py</code></td></tr>
+<tr><td><strong>维护成本</strong></td><td>高（需要同步更新）</td><td>低（核心稳定）</td></tr>
+<tr><td><strong>可扩展性</strong></td><td>需修改 Server 代码</td><td>execute_code 可扩展</td></tr>
+</table>
+
+<div class="card card-accent2">
+<div class="card-title">关键进步</div>
+<ul style="margin-left: 20px;">
+<li>V1 → V2：从"自定义 TCP socket"升级到"标准 MCP 协议 + 标准传输层"</li>
+<li>保留了 V1 的优势：QTimer 线程安全模型、18 个核心工具、execute_code 兜底</li>
+<li>新增了 V1 没有的：标准 MCP 工具注册、自动 schema 生成、多传输层支持</li>
+<li>与 nkarasiak 方案架构一致，但工具集更精简（维护成本低）</li>
+</ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>八、完整调用链路</h2>
+
+<div class="arch-diagram">
+<pre>
+① AI 决定调用 get_layers
+    │
+② MCP Client → stdio → FastMCP Server
+    │  {"jsonrpc":"2.0","method":"tools/call",
+    │   "params":{"name":"get_layers","arguments":{}}, "id":1}
+    │
+③ FastMCP 解析请求 → 调用 @mcp.tool 装饰的函数
+    │
+④ get_layers() → _call_tool("get_layers", {})
+    │
+⑤ TCP Client → raw TCP → QGIS 插件 :9876
+    │  {"jsonrpc":"2.0","method":"tools/call",
+    │   "params":{"name":"get_layers","arguments":{}}, "id":1234}
+    │
+⑥ QGIS 插件 QTimer 主线程 → execute_command → PyQGIS API
+    │
+⑦ QGIS 插件 → TCP 响应
+    │  {"jsonrpc":"2.0","id":1234,
+    │   "result":{"content":[{"type":"text","text":"[...]"}]}}
+    │
+⑧ TCP Client → FastMCP Server → JSON-RPC 2.0 响应 → MCP Client → AI
+</pre>
+</div>
+
+<div class="footer">
+  Generated 2026-05-02 · QGIS MCP V1 → V2 Architecture Upgrade
+</div>
+
+</body>
+</html>

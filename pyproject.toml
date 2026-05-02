@@ -1,0 +1,15 @@
+[project]
+name = "qgis-mcp-server"
+version = "2.0.0"
+description = "Standard MCP server bridging LLM clients to QGIS via TCP"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+]
+
+[project.scripts]
+qgis-mcp = "server.server:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
