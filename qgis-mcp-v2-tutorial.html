@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QGIS MCP Server V2 开发教程</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --surface: #ffffff;
+  --border: #e1e4e8;
+  --text: #24292e;
+  --text-dim: #586069;
+  --text-bright: #000000;
+  --accent: #0366d6;
+  --accent2: #28a745;
+  --accent3: #6f42c1;
+  --accent4: #e36209;
+  --accent5: #d73a49;
+  --code-bg: #f6f8fa;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+h1 {
+  color: var(--text-bright);
+  font-size: 2.2em;
+  font-weight: 700;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+h2 {
+  color: var(--text-bright);
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 48px;
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 3px solid var(--accent);
+}
+h3 {
+  color: var(--accent);
+  font-size: 1.15em;
+  font-weight: 600;
+  margin-top: 28px;
+  margin-bottom: 12px;
+}
+h4 {
+  color: var(--text-bright);
+  font-size: 1em;
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+p { margin-bottom: 14px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+blockquote {
+  border-left: 3px solid var(--accent3);
+  padding: 8px 16px;
+  margin: 16px 0;
+  background: var(--surface);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-dim);
+  font-style: italic;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  margin: 16px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace;
+  font-size: 0.9em;
+}
+:not(pre) > code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent3);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+}
+th {
+  background: var(--code-bg);
+  color: var(--text-bright);
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+td {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: rgba(246, 248, 250, 0.5); }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 16px 0;
+}
+.card-accent { border-left: 3px solid var(--accent); }
+.card-accent2 { border-left: 3px solid var(--accent2); }
+.card-accent3 { border-left: 3px solid var(--accent3); }
+.card-title {
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+  font-size: 1.05em;
+}
+.arch-diagram {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  text-align: center;
+}
+.arch-diagram pre {
+  text-align: left;
+  display: inline-block;
+  margin: 0;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--accent);
+}
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 4px;
+}
+.tag-blue { background: rgba(3,102,214,0.1); color: var(--accent); }
+.tag-green { background: rgba(40,167,69,0.1); color: var(--accent2); }
+.tag-purple { background: rgba(111,66,193,0.1); color: var(--accent3); }
+ul, ol { margin: 8px 0 14px 24px; }
+li { margin-bottom: 4px; }
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 32px 0;
+}
+.footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 13px;
+  text-align: center;
+}
+.highlight {
+  background: rgba(3,102,214,0.05);
+  border: 1px solid rgba(3,102,214,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+</style>
+</head>
+<body>
+
+<h1>QGIS MCP Server V2 开发教程</h1>
+<blockquote>标准 MCP 协议 + FastMCP 框架，让 AI 助手操控 QGIS · 2026-05-02 · V2.0.0</blockquote>
+
+<!-- ============================================================ -->
+<h2>一、项目概述</h2>
+
+<p><strong>QGIS MCP Server</strong> 是一个遵循 <a href="https://modelcontextprotocol.io/">Model Context Protocol (MCP)</a> 标准的 QGIS 集成方案，将 QGIS 的 GIS 能力以结构化工具的形式暴露给 AI 助手。</p>
+
+<div class="card card-accent2">
+<div class="card-title">核心特性</div>
+<ul style="margin-left: 20px;">
+<li>✅ <strong>标准 MCP 协议</strong>：JSON-RPC 2.0 over stdio/SSE/HTTP</li>
+<li>✅ <strong>FastMCP 框架</strong>：<code>@mcp.tool()</code> 自动注册工具、生成 JSON Schema</li>
+<li>✅ <strong>18 个结构化工具</strong>：覆盖图层管理、空间查询、样式渲染等核心操作</li>
+<li>✅ <strong>无代码执行</strong>：全部参数化，安全可控</li>
+<li>✅ <strong>多传输层</strong>：stdio（本地）、SSE（远程）、HTTP（Streamable）</li>
+</ul>
+</div>
+
+<h3>V1 → V2 升级</h3>
+
+<table>
+<tr><th>维度</th><th>V1（旧）</th><th>V2（新）</th></tr>
+<tr><td>协议</td><td>自定义 TCP socket</td><td><strong>标准 MCP（JSON-RPC 2.0）</strong></td></tr>
+<tr><td>传输层</td><td>raw TCP</td><td><strong>stdio / SSE / HTTP</strong></td></tr>
+<tr><td>框架</td><td>手写协议处理</td><td><strong>FastMCP（官方框架）</strong></td></tr>
+<tr><td>工具注册</td><td>手动定义 schema</td><td><strong>@mcp.tool() 自动注册</strong></td></tr>
+<tr><td>客户端兼容</td><td>仅自定义客户端</td><td><strong>任何 MCP 客户端</strong></td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>二、架构设计</h2>
+
+<h3>2.1 三层架构</h3>
+
+<div class="arch-diagram">
+<pre>
+┌─────────────────────────────────────────────────────────────┐
+│                MCP 客户端 (Claude / Cursor / Hermes)          │
+│              stdio / SSE / StreamableHTTP                    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ JSON-RPC 2.0 (MCP 标准协议)
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                MCP Server (FastMCP 框架)                      │
+│          server/server.py — 工具注册、参数校验、响应封装         │
+│          server/client.py — TCP 客户端连接 QGIS 插件          │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ raw TCP socket (内部通信)
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                QGIS 插件 (plugin.py)                          │
+│          QTimer 主线程安全执行 PyQGIS API                      │
+│          TCP Server 监听 :9876                                │
+└─────────────────────────────────────────────────────────────┘
+</pre>
+</div>
+
+<h3>2.2 协议分层</h3>
+
+<table>
+<tr><th>层级</th><th>协议</th><th>说明</th></tr>
+<tr><td><strong>MCP 客户端 ↔ MCP Server</strong></td><td>JSON-RPC 2.0 over stdio/SSE/HTTP</td><td>标准 MCP 协议</td></tr>
+<tr><td><strong>MCP Server ↔ QGIS 插件</strong></td><td>raw TCP + JSON-RPC 2.0</td><td>内部通信，不对外暴露</td></tr>
+</table>
+
+<h3>2.3 文件结构</h3>
+
+<pre><code>qgis-standard-mcp/
+├── server/                     # MCP Server（V2 新增）
+│   ├── __init__.py
+│   ├── __main__.py
+│   ├── server.py               # FastMCP 服务器，注册 18 个工具
+│   └── client.py               # TCP 客户端，连接 QGIS 插件
+├── qgis_standard_mcp_plugin/   # QGIS 插件
+│   ├── __init__.py
+│   ├── metadata.txt
+│   └── qgis_standard_mcp_plugin.py
+├── run_server.py               # 启动脚本
+├── pyproject.toml              # Python 包配置
+├── README.md
+└── LICENSE</code></pre>
+
+<!-- ============================================================ -->
+<h2>三、安装部署</h2>
+
+<h3>3.1 安装 QGIS 插件</h3>
+
+<p>将 <code>qgis_standard_mcp_plugin/</code> 文件夹复制到 QGIS 插件目录：</p>
+
+<table>
+<tr><th>系统</th><th>路径</th></tr>
+<tr><td>Windows</td><td><code>C:\Users\&lt;用户名&gt;\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\</code></td></tr>
+<tr><td>Linux</td><td><code>~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/</code></td></tr>
+<tr><td>macOS</td><td><code>~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/</code></td></tr>
+</table>
+
+<p>重启 QGIS → 插件管理器 → 勾选 "QGIS Standard MCP"</p>
+
+<h3>3.2 安装 MCP Server 依赖</h3>
+
+<pre><code>pip install mcp
+# 或使用 uv
+uv pip install mcp</code></pre>
+
+<h3>3.3 配置 MCP 客户端</h3>
+
+<div class="card card-accent">
+<div class="card-title">Claude Desktop</div>
+<pre><code>{
+  "mcpServers": {
+    "qgis": {
+      "command": "python",
+      "args": ["/path/to/run_server.py"],
+      "env": {
+        "QGIS_MCP_HOST": "localhost",
+        "QGIS_MCP_PORT": "9876"
+      }
+    }
+  }
+}</code></pre>
+</div>
+
+<div class="card card-accent2">
+<div class="card-title">Hermes</div>
+<pre><code>mcp_servers:
+  qgis:
+    command: python3
+    args:
+    - /path/to/run_server.py
+    env:
+      QGIS_MCP_HOST: host.docker.internal
+      QGIS_MCP_PORT: "9876"</code></pre>
+</div>
+
+<div class="card card-accent3">
+<div class="card-title">Cursor</div>
+<pre><code>{
+  "mcpServers": {
+    "qgis": {
+      "command": "python",
+      "args": ["/path/to/run_server.py"]
+    }
+  }
+}</code></pre>
+</div>
+
+<h3>3.4 启动</h3>
+
+<ol style="margin-left: 20px;">
+<li>打开 QGIS → Plugins → QGIS Standard MCP → Start MCP Server</li>
+<li>启动 MCP Server：<code>python run_server.py</code> 或 <code>python -m server</code></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>四、工具 API 参考</h2>
+
+<h3>4.1 基础连接</h3>
+
+<h4><code>ping</code></h4>
+<p>检查 MCP 服务器连通性。</p>
+<p><strong>参数</strong>：无</p>
+<p><strong>返回</strong>：</p>
+<pre><code>{"pong": true, "server": "qgis-standard-mcp", "version": "0.1.0"}</code></pre>
+
+<h4><code>get_qgis_info</code></h4>
+<p>获取 QGIS 版本和安装信息。</p>
+<p><strong>参数</strong>：无</p>
+<p><strong>返回</strong>：</p>
+<pre><code>{"qgis_version": "3.44.9-Solothurn", "profile_folder": "C:/Users/.../QGIS3/profiles/default/", "plugins_count": 9}</code></pre>
+
+<h3>4.2 项目管理</h3>
+
+<h4><code>get_project_info</code></h4>
+<p>获取当前项目信息。</p>
+<p><strong>参数</strong>：无</p>
+<p><strong>返回</strong>：</p>
+<pre><code>{"filename": "D:/GISDATA/test.qgz", "title": "测试项目", "crs": "EPSG:4326", "layer_count": 2, "layers": [...]}</code></pre>
+
+<h4><code>create_project</code></h4>
+<p>创建新项目。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>path</code></td><td>string</td><td>✅</td><td>项目保存路径</td></tr>
+</table>
+
+<h4><code>load_project</code></h4>
+<p>加载已有项目。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>path</code></td><td>string</td><td>✅</td><td>项目文件路径</td></tr>
+</table>
+
+<h4><code>save_project</code></h4>
+<p>保存当前项目。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>path</code></td><td>string</td><td>❌</td><td>保存路径（可选）</td></tr>
+</table>
+
+<h3>4.3 图层管理</h3>
+
+<h4><code>get_layers</code></h4>
+<p>列出所有图层。</p>
+<p><strong>参数</strong>：无</p>
+<p><strong>返回</strong>：</p>
+<pre><code>[{"id": "layer_id_abc123", "name": "云南省界", "type": "vector", "geometry_type": "Polygon", "feature_count": 1, "fields": ["name", "code"]}]</code></pre>
+
+<h4><code>add_vector_layer</code></h4>
+<p>添加矢量图层。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>path</code></td><td>string</td><td>✅</td><td>-</td><td>数据源路径</td></tr>
+<tr><td><code>name</code></td><td>string</td><td>❌</td><td>文件名</td><td>图层显示名称</td></tr>
+<tr><td><code>provider</code></td><td>string</td><td>❌</td><td>"ogr"</td><td>数据提供者</td></tr>
+</table>
+
+<h4><code>add_raster_layer</code></h4>
+<p>添加栅格图层。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>path</code></td><td>string</td><td>✅</td><td>-</td><td>数据源路径</td></tr>
+<tr><td><code>name</code></td><td>string</td><td>❌</td><td>文件名</td><td>图层显示名称</td></tr>
+<tr><td><code>provider</code></td><td>string</td><td>❌</td><td>"gdal"</td><td>数据提供者</td></tr>
+</table>
+
+<h4><code>remove_layer</code></h4>
+<p>删除图层。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>layer_id</code></td><td>string</td><td>✅</td><td>图层 ID</td></tr>
+</table>
+
+<h3>4.4 要素查询</h3>
+
+<h4><code>get_layer_features</code></h4>
+<p>获取图层要素。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>layer_id</code></td><td>string</td><td>✅</td><td>-</td><td>图层 ID</td></tr>
+<tr><td><code>limit</code></td><td>integer</td><td>❌</td><td>100</td><td>最大返回数</td></tr>
+<tr><td><code>filter_expression</code></td><td>string</td><td>❌</td><td>-</td><td>QGIS 表达式过滤</td></tr>
+</table>
+
+<h4><code>spatial_query</code></h4>
+<p>空间查询（点半径/矩形）。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>layer_id</code></td><td>string</td><td>✅</td><td>图层 ID</td></tr>
+<tr><td><code>query_type</code></td><td>string</td><td>✅</td><td>"point_radius" 或 "bbox"</td></tr>
+<tr><td><code>center_lng</code></td><td>number</td><td>条件</td><td>中心经度（point_radius）</td></tr>
+<tr><td><code>center_lat</code></td><td>number</td><td>条件</td><td>中心纬度（point_radius）</td></tr>
+<tr><td><code>radius_meters</code></td><td>number</td><td>条件</td><td>搜索半径（米）</td></tr>
+<tr><td><code>min_lng</code></td><td>number</td><td>条件</td><td>西边界（bbox）</td></tr>
+<tr><td><code>min_lat</code></td><td>number</td><td>条件</td><td>南边界（bbox）</td></tr>
+<tr><td><code>max_lng</code></td><td>number</td><td>条件</td><td>东边界（bbox）</td></tr>
+<tr><td><code>max_lat</code></td><td>number</td><td>条件</td><td>北边界（bbox）</td></tr>
+<tr><td><code>limit</code></td><td>integer</td><td>❌</td><td>最大返回数（默认 100）</td></tr>
+</table>
+
+<h3>4.5 样式渲染</h3>
+
+<h4><code>set_layer_style</code></h4>
+<p>设置图层样式。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>layer_id</code></td><td>string</td><td>✅</td><td>图层 ID</td></tr>
+<tr><td><code>style</code></td><td>object</td><td>✅</td><td>样式配置</td></tr>
+</table>
+
+<p><strong>style 对象属性</strong>：</p>
+<table>
+<tr><th>属性</th><th>类型</th><th>说明</th></tr>
+<tr><td><code>fill_color</code></td><td>string</td><td>填充颜色（如 "#e74c3c"）</td></tr>
+<tr><td><code>outline_color</code></td><td>string</td><td>轮廓颜色</td></tr>
+<tr><td><code>outline_width</code></td><td>number</td><td>轮廓宽度（mm）</td></tr>
+<tr><td><code>opacity</code></td><td>number</td><td>透明度（0.0-1.0）</td></tr>
+<tr><td><code>point_size</code></td><td>number</td><td>点符号大小</td></tr>
+<tr><td><code>point_shape</code></td><td>string</td><td>点形状（circle/square/triangle/diamond/star）</td></tr>
+</table>
+
+<h4><code>render_map</code></h4>
+<p>渲染地图为图片。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>output_path</code></td><td>string</td><td>✅</td><td>-</td><td>输出文件路径</td></tr>
+<tr><td><code>width</code></td><td>integer</td><td>❌</td><td>1200</td><td>图片宽度</td></tr>
+<tr><td><code>height</code></td><td>integer</td><td>❌</td><td>900</td><td>图片高度</td></tr>
+</table>
+
+<h3>4.6 视图控制</h3>
+
+<h4><code>zoom_to_extent</code></h4>
+<p>缩放到指定范围。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>min_lng</code></td><td>number</td><td>✅</td><td>-</td><td>西边界</td></tr>
+<tr><td><code>min_lat</code></td><td>number</td><td>✅</td><td>-</td><td>南边界</td></tr>
+<tr><td><code>max_lng</code></td><td>number</td><td>✅</td><td>-</td><td>东边界</td></tr>
+<tr><td><code>max_lat</code></td><td>number</td><td>✅</td><td>-</td><td>北边界</td></tr>
+<tr><td><code>crs</code></td><td>string</td><td>❌</td><td>"EPSG:4326"</td><td>坐标系</td></tr>
+</table>
+
+<h4><code>zoom_to_layer</code></h4>
+<p>缩放到图层范围。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>layer_id</code></td><td>string</td><td>✅</td><td>图层 ID</td></tr>
+</table>
+
+<h3>4.7 空间分析</h3>
+
+<h4><code>buffer_analysis</code></h4>
+<p>缓冲区分析。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>layer_id</code></td><td>string</td><td>✅</td><td>图层 ID</td></tr>
+<tr><td><code>distance</code></td><td>number</td><td>✅</td><td>缓冲距离（米）</td></tr>
+<tr><td><code>output_path</code></td><td>string</td><td>❌</td><td>输出路径</td></tr>
+</table>
+
+<h4><code>execute_processing</code></h4>
+<p>执行 QGIS Processing 算法。</p>
+<table>
+<tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td><code>algorithm</code></td><td>string</td><td>✅</td><td>算法名称</td></tr>
+<tr><td><code>parameters</code></td><td>object</td><td>✅</td><td>算法参数</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>五、开发手记</h2>
+
+<h3>5.1 线程安全模型</h3>
+
+<div class="arch-diagram">
+<pre>
+TCP Server 线程 (socket.recv)          QTimer 主线程回调
+        │                                    │
+        │  recv 数据 → 解析 JSON-RPC          │
+        │  放入 request_queue                 │
+        │                                    │
+        │  ──────────────────────────────►    │
+        │                                    │  从队列取出请求
+        │                                    │  执行 PyQGIS API
+        │                                    │  放入 response_queue
+        │                                    │
+        │  ◄──────────────────────────────    │
+        │  从 response_queue 取响应           │
+        │  sendall 回客户端                    │
+</pre>
+</div>
+
+<h3>5.2 已知陷阱</h3>
+
+<div class="card card-accent">
+<div class="card-title">CRS 不匹配</div>
+<p>bbox 坐标输入是 WGS84 (EPSG:4326)，但图层可能是投影坐标系。必须做坐标转换：</p>
+<pre><code>src_crs = QgsCoordinateReferenceSystem("EPSG:4326")
+dst_crs = layer.crs()
+transform = QgsCoordinateTransform(src_crs, dst_crs, project.transformContext())
+rect = transform.transformBoundingBox(QgsRectangle(min_lng, min_lat, max_lng, max_lat))</code></pre>
+</div>
+
+<div class="card card-accent2">
+<div class="card-title">画布白屏</div>
+<p>三个条件必须同时满足：</p>
+<ol style="margin-left: 20px;">
+<li><code>create_project</code> 必须设 CRS</li>
+<li><code>add_vector_layer</code> 必须 <code>refresh()</code> + <code>zoomToActiveLayer()</code></li>
+<li><code>render_map</code> 必须用图层联合范围</li>
+</ol>
+</div>
+
+<div class="card card-accent3">
+<div class="card-title">QVariant 序列化</div>
+<p>QGIS 属性值是 QVariant，JSON 不认识。必须：</p>
+<pre><code>attrs = {k: v.toPyObj() if hasattr(v, 'toPyObj') else v for k, v in raw_attrs.items()}</code></pre>
+</div>
+
+<!-- ============================================================ -->
+<h2>六、测试验证</h2>
+
+<h3>6.1 原始 TCP 测试</h3>
+
+<pre><code>import socket, json
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect(('localhost', 9876))
+
+# 握手
+request = {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+           "params": {"protocolVersion": "2024-11-05", "capabilities": {},
+                      "clientInfo": {"name": "test", "version": "1.0"}}}
+sock.sendall(json.dumps(request).encode())
+response = json.loads(sock.recv(65536))
+print(response)
+
+# 调用工具
+request = {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+           "params": {"name": "get_layers", "arguments": {}}}
+sock.sendall(json.dumps(request).encode())
+response = json.loads(sock.recv(65536))
+print(response)</code></pre>
+
+<h3>6.2 MCP Server 测试</h3>
+
+<pre><code>from server.client import QGISConnection
+
+conn = QGISConnection('localhost', 9876)
+conn.connect()
+conn.initialize()
+
+# 列出工具
+tools = conn.list_tools()
+print(f"{len(tools)} 个工具")
+
+# 调用工具
+result = conn.call_tool('ping')
+print(result)</code></pre>
+
+<div class="footer">
+  Generated 2026-05-02 · QGIS MCP Server V2.0.0
+</div>
+
+</body>
+</html>
